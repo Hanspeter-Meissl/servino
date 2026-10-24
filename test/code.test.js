@@ -167,6 +167,8 @@ pruefe(m1.htmlBody.includes(`?k=${zS}`) && m1.htmlBody.includes("Lieber Herbert,
        && m1.htmlBody.includes("Bitte bis zum Meeting bestellen.") && m1.htmlBody.includes("Donnerstag, 5. November 2026"),
        "Einladung mit Link, Gruß, Du, Zusatz und Datum");
 pruefe(!m1.htmlBody.includes(zM), "Mail trägt nur den eigenen Link");
+pruefe(m1.body && m1.body.startsWith("Lieber Herbert,") && m1.body.includes(`?k=${zS}`) && !m1.body.includes("<"),
+       "Mail hat eine Textfassung mit Link");
 g.kontingentSetzen(10);
 s = c.vwSenden("TEST", SA, "Einladung", "");
 pruefe(s.ergebnis.gesendet === 1 && g.mails[3].to === "eva@example.org", "zweiter Lauf schickt nur den Rest");

@@ -706,8 +706,9 @@ function mailTexte(c, art) {
 
 // Schlichte Fassung der Einladung für den Mail-Knopf in der Verwaltung: geht aus dem Postfach des Sekretärs,
 // deshalb ohne Tageslimit, aber ohne Preistabelle und gestalteten Knopf.
-function mailKlartext(c, m) {
-  const t = mailTexte(c, 'Einladung');
+// Dieselbe Fassung geht als Textteil mit jeder Mail aus der Web-App; reine HTML-Mails landen leichter im Spam.
+function mailKlartext(c, m, art) {
+  const t = mailTexte(c, art || 'Einladung');
   const datum = datumLang(c.Bestellschluss);
   const teile = [gruss(m, c.Anrede === 'sie' ? 'sie' : 'du') + ',', t.einleitung, link(m)];
   const termine = [datum ? t.schluss(datum) : '', c.Abholung ? `Abholung: ${c.Abholung}.` : '', c.Bezahlung || '']
@@ -774,7 +775,8 @@ function vwSenden(kuerzel, schluessel, art, zusatz) {
     let stand = 'gesendet';
     try {
       const optionen = { to: m['E-Mail'], subject: (art === 'Probe' ? 'Probe: ' : '') + mail.betreff,
-                         htmlBody: mail.html, name: `SERVINO ${c.Name}` };
+                         htmlBody: mail.html, name: `SERVINO ${c.Name}`,
+                         body: mailKlartext(c, m, art === 'Probe' ? 'Einladung' : art).text };
       if (c.Antwortadresse) optionen.replyTo = c.Antwortadresse;
       MailApp.sendEmail(optionen);
       ergebnis.gesendet++;

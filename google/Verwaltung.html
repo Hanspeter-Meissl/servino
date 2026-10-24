@@ -234,7 +234,8 @@
     };
     const zusatz = document.getElementById("zusatz") ? document.getElementById("zusatz").value : "";
     document.getElementById("versand").innerHTML = `
-      <p class="klein" style="margin-top:12px">Die Mails gehen vom SERVINO-Konto mit dem Absender „SERVINO ${esc(daten.club.name)}“.
+      <p class="klein" style="margin-top:12px">Die Mails gehen von der Web-App mit dem Absender „SERVINO ${esc(daten.club.name)}“.
+      Die erste Mail landet bei manchen Empfängern im Spam; bitte die Mitglieder vorab darauf hinweisen.
       Antworten landen bei ${daten.club.antwortadresse ? esc(daten.club.antwortadresse) : "niemandem, solange in den Einstellungen keine Antwortadresse steht"}.
       Heute können noch <b>${daten.kontingent}</b> Mails verschickt werden, das Tageslimit von Google gilt für alle Clubs gemeinsam.</p>
       <label for="zusatz">Persönlicher Zusatz <small>(freiwillig, steht nach der Einleitung)</small></label>
