@@ -96,6 +96,35 @@ function verwaltungsLinks() {
   Logger.log(`Gesamtsicht: ${webapp}?gesamt=${props.getProperty('GESAMT')}`);
 }
 
+// Kennung der kopierten Tabelle für den Umzug; der Editor kann Funktionen nur ohne Angaben starten.
+const UMZUG_KENNUNG = '';
+
+function umzugAusfuehren() {
+  umziehen(UMZUG_KENNUNG);
+}
+
+// Umzug in ein anderes Google-Konto: Im neuen Konto eine Kopie der Tabelle „SERVINO Clubs“ anlegen und deren
+// Kennung (aus der Adresse zwischen /d/ und /edit) bei UMZUG_KENNUNG eintragen. Geprüft wird, ob alle Blätter
+// mit den erwarteten Spalten da sind. Mitgliederlinks und Schlüssel der Clubs stehen in der Tabelle und
+// bleiben gültig; neu sind nur die Adresse der Web-App und der Schlüssel der Gesamtsicht.
+function umziehen(kennung) {
+  kennung = String(kennung || '').trim();
+  if (!kennung) throw new Error('Bitte die Kennung der kopierten Tabelle angeben');
+  const neu = SpreadsheetApp.openById(kennung);
+  Object.keys(KOPF).forEach(name => {
+    const b = neu.getSheetByName(name);
+    if (!b) throw new Error(`Blatt „${name}“ fehlt in der Tabelle`);
+    const kopf = b.getDataRange().getDisplayValues()[0].map(k => String(k).trim());
+    const fehlt = KOPF[name].filter(k => kopf.indexOf(k) < 0);
+    if (fehlt.length) throw new Error(`Blatt „${name}“: Spalten fehlen: ${fehlt.join(', ')}`);
+  });
+  PropertiesService.getScriptProperties().setProperty('TABELLE', kennung);
+  _tabelle = null;
+  Logger.log(`Tabelle umgestellt: ${lesen(BLATT.clubs).length} Clubs, ${lesen(BLATT.mitglieder).length} Mitglieder, `
+    + `${lesen(BLATT.bestellungen).length} Bestellungen`);
+  verwaltungsLinks();
+}
+
 // ------------------------------------------------------------------ Tabelle
 
 let _tabelle = null;

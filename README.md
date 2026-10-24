@@ -57,12 +57,29 @@ Spätere Änderungen am Code: im Editor ersetzen, dann „Bereitstellen“, „B
 bestehende Bereitstellung bearbeiten, Version „Neue Version“. Nicht „Neue Bereitstellung“, das legt eine
 zweite Adresse an.
 
+## Umzug in ein anderes Google-Konto
+
+Der Pilot läuft vorerst im privaten Google-Konto von Hanspeter Meissl und zieht später in ein eigenes SERVINO-Konto um.
+Die Mitgliederlinks zeigen auf diese Seite, nicht auf Google, und bleiben deshalb gültig.
+
+1. Im alten Konto die Tabelle „SERVINO Clubs“ für das neue Konto freigeben.
+2. Im neuen Konto die Tabelle öffnen, „Datei“, „Kopie erstellen“, und die Kennung der Kopie notieren (in der
+   Adresse zwischen `/d/` und `/edit`).
+3. Im neuen Konto das Projekt anlegen wie oben unter Einrichtung, Schritt 1. `einrichten` nicht ausführen.
+4. Bereitstellen wie oben, Schritt 3, und die neue Adresse als `WEBAPP` eintragen.
+5. In `Code.gs` die Kennung bei `UMZUG_KENNUNG` eintragen und `umzugAusfuehren` ausführen. Das prüft die
+   Blätter, stellt um und zeigt die neuen Verwaltungslinks und den Link der Gesamtsicht.
+6. In `einstellung.js` die neue Adresse als `GOOGLE` eintragen und veröffentlichen.
+7. Den Sekretären die neuen Verwaltungslinks schicken. Im alten Konto die Bereitstellung archivieren, damit
+   niemand mehr in die alte Tabelle schreibt.
+
 ## Grenzen
 
 - Ein kostenloses Google-Konto darf laut Google rund 100 Mail-Empfänger je Tag anschreiben, für alle Clubs
   zusammen. Die Verwaltung zeigt das Restkontingent; „Einladung“ schickt beim nächsten Mal nur die übrigen.
 - Für mehr Mails ohne Limit gibt es je Mitglied den Knopf „Mail“: Er öffnet eine fertige Mail im Postfach des
   Sekretärs, schlichter Text mit Link, ohne Preistabelle.
+- Bis zum Umzug gehen die Mails von dessen Gmail-Adresse, mit dem Anzeigenamen „SERVINO <Club>“.
 - Ob der Download der Excel-Datei im Rahmen von Google Apps Script klappt, ist erst nach der Einrichtung
   prüfbar; im Nachbau ist er geprüft.
 - Das Textformat der Blätter ist für die ersten 1 000 Zeilen gesetzt.

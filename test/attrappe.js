@@ -72,9 +72,10 @@ function laden(optionen = {}) {
     console,
     PropertiesService: { getScriptProperties: () => ({
       getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = String(v); } }) },
+    // Mit optionen.fremd liefert openById die Tabelle eines anderen Nachbaus, wie nach dem Umzug in ein neues Konto.
     SpreadsheetApp: {
       create: () => (tabelle = tabelleBauen()),
-      openById: () => tabelle,
+      openById: id => (optionen.fremd && id === "KOPIE" ? optionen.fremd() : tabelle),
     },
     Utilities: {
       formatDate: (d, tz, muster) => format(zustand.jetzt ? new Date(zustand.jetzt) : d, muster),

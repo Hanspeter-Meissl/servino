@@ -220,5 +220,24 @@ c.vwEinstellungen("TEST", SA, { Ende: "2026-11-30" });
 g.jetzt = "2026-12-01T08:00:00+01:00";
 pruefe(post(zS, { red: 6 }).fehler === "Bestellung geschlossen", "nach dem Ende nimmt die Web-App nichts an");
 
+// ---------------------------------------------------------------- Umzug in ein anderes Konto
+// Neues Projekt ohne eigene Tabelle; „KOPIE“ liefert die Tabelle des bisherigen Nachbaus.
+const neu = laden({ fremd: () => g.tabelle() });
+neu.props.WEBAPP = "https://script.google.com/macros/s/NEU/exec";
+wirft(() => neu.ctx.umziehen(""), /Kennung/, "Umzug ohne Kennung");
+neu.ctx.umziehen("KOPIE");
+pruefe(neu.props.TABELLE === "KOPIE" && neu.logs.some(l => /2 Clubs, 6 Mitglieder/.test(l)), "Umzug: Tabelle übernommen und gezählt");
+pruefe(neu.logs.some(l => l.includes("NEU/exec?verwaltung=TEST&s=" + SA)), "Umzug: Verwaltungslink mit neuer Adresse, alter Schlüssel");
+pruefe(neu.props.GESAMT && neu.props.GESAMT !== g.props.GESAMT, "Umzug: neuer Schlüssel der Gesamtsicht");
+d = neu.get({ k: zS });
+pruefe(d.ok && d.mitglied.gruss === "Lieber Herbert" && d.bestellung.abschnitte.length === 2, "Umzug: alter Mitgliederlink gilt weiter");
+pruefe(neu.ctx.vwLaden("TEST", SA).abrechnung.summe === 166, "Umzug: Abrechnung unverändert");
+const kaputt = laden();
+kaputt.ctx.einrichten();
+kaputt.tabelle().blaetter.splice(kaputt.tabelle().blaetter.findIndex(b => b.name === "Versand"), 1);
+const neu2 = laden({ fremd: () => kaputt.tabelle() });
+wirft(() => neu2.ctx.umziehen("KOPIE"), /Versand/, "Umzug mit fehlendem Blatt abgelehnt");
+pruefe(!neu2.props.TABELLE, "abgelehnter Umzug stellt nichts um");
+
 console.log(`${geprueft - fehler} von ${geprueft} Prüfungen bestanden`);
 process.exit(fehler ? 1 : 0);
