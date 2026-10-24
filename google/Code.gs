@@ -12,8 +12,9 @@
  *   Schlüssel; jede Funktion der Verwaltung prüft Kürzel und Schlüssel, bevor sie liest oder schreibt.
  *
  * Einrichtung (einmal):
- * 1. Code.gs und Verwaltung.html in ein neues Apps-Script-Projekt „SERVINO Clubs“ einfügen,
- *    appsscript.json übernehmen.
+ * 1. Code.gs, Verwaltung.html und preis.js (als Skriptdatei „preis“) in ein neues Apps-Script-Projekt
+ *    „SERVINO Clubs“ einfügen, appsscript.json übernehmen. preis.js ist dieselbe Datei wie auf der
+ *    Bestellseite, damit die Rechenregel nur einmal steht.
  * 2. Funktion „einrichten“ ausführen und den Zugriff erlauben. Das Protokoll zeigt die Tabelle und den
  *    Verwaltungslink des Testclubs.
  * 3. Bereitstellen als Web-App: Ausführen als „Ich“, Zugriff „Jeder“. Die Adresse kommt in einstellung.js
@@ -89,6 +90,10 @@ function verwaltungsLinks() {
       Logger.log(`${c['Kürzel']} ${c.Name}: ${webapp}?verwaltung=${encodeURIComponent(c['Kürzel'])}&s=${c['Schlüssel']}`);
     });
   });
+  // Gesamtsicht über alle Clubs mit eigenem Schlüssel, getrennt von den Schlüsseln der Clubs.
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('GESAMT')) props.setProperty('GESAMT', zufall(24));
+  Logger.log(`Gesamtsicht: ${webapp}?gesamt=${props.getProperty('GESAMT')}`);
 }
 
 // ------------------------------------------------------------------ Tabelle
@@ -213,6 +218,7 @@ function doGet(e) {
   try {
     if (p.k !== undefined) return antwort(mitgliedDaten(p.k));
     if (p.verwaltung !== undefined) return verwaltungsseite(p.verwaltung, p.s);
+    if (p.gesamt && p.gesamt === eigenschaft('GESAMT')) return gesamtseite();
   } catch (fehler) {
     return antwort({ ok: false, fehler: String(fehler.message || fehler) });
   }
@@ -410,6 +416,20 @@ function verwaltungsseite(kuerzel, schluessel) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
+// Für den Kassier: jede Bestellung auf „bestellt“ mit Betrag nach preis.js (im Projekt als Datei „preis“).
+// Abzubuchen sind nur die abgeholten, wie beim Club 41; die übrigen stehen ohne Betrag darunter.
+function abrechnung(stand, so) {
+  const zeilen = stand.bestellungen.filter(b => b.status === 'bestellt').map(b => {
+    const r = bestellung(so, b.mengen, MINDESTMENGE);
+    return { nr: b.nr, name: b.name, mengen: b.mengen, flaschen: r.flaschen,
+             kartons: r.zeilen.reduce((s, z) => s + z.kartons, 0), betrag: r.summe,
+             art: b.nummer > 1 ? 'zusätzliche' : 'erste', abgeholt: b.abgeholt || '' };
+  });
+  const ab = zeilen.filter(z => z.abgeholt);
+  return { abgeholt: ab, offen: zeilen.filter(z => !z.abgeholt), summe: ab.reduce((s, z) => s + z.betrag, 0),
+           pruefen: stand.bestellungen.filter(b => b.status === 'prüfen').map(b => b.name) };
+}
+
 // Alles für die Verwaltung eines Clubs: Einstellungen, Mitglieder mit Link und Status, Stand, Versand.
 function vwLaden(kuerzel, schluessel) {
   const c = clubPruefen(kuerzel, schluessel);
@@ -424,9 +444,11 @@ function vwLaden(kuerzel, schluessel) {
     nr: Number(m['Nr.']), vorname: m.Vorname, nachname: m.Nachname, email: m['E-Mail'], mobil: m.Mobil,
     anrede: m.Anrede, aktiv: aktiv(m), link: link(m), gruss: gruss(m, c.Anrede === 'sie' ? 'sie' : 'du'),
     status: je[m['Nr.']] ? je[m['Nr.']].status : 'offen',
-    eingeladen: zuletzt(m['Nr.'], 'Einladung'), erinnert: zuletzt(m['Nr.'], 'Erinnerung') }))
+    eingeladen: zuletzt(m['Nr.'], 'Einladung'), erinnert: zuletzt(m['Nr.'], 'Erinnerung'),
+    mail: m['E-Mail'] && aktiv(m) ? mailKlartext(c, m) : null }))
     .sort((a, b) => a.nr - b.nr);
   return { club: clubDaten(c), sorten: so, mindestmenge: MINDESTMENGE, stand: stand, mitglieder: mitglieder,
+           abrechnung: abrechnung(stand, so),
            versand: versand.slice(-20).reverse().map(v => ({ zeit: v.Zeitpunkt, nr: v['Nr.'], art: v.Art,
                                                              an: v['Empfänger'], ergebnis: v.Ergebnis })),
            kontingent: MailApp.getRemainingDailyQuota(), jetzt: jetzt('dd.MM.yyyy HH:mm') };
@@ -552,6 +574,60 @@ function vwAbholen(kuerzel, schluessel, nr, aktion) {
   return vwLaden(kuerzel, schluessel);
 }
 
+// ------------------------------------------------------------------ Gesamtsicht
+
+// Je Club und zusammen: Bestellungen und Flaschen je Sorte, bestellt und abgeholt. Ohne Namen und Beträge,
+// sie dient der Sammelbestellung beim Weingut.
+function gesamtStand() {
+  const so = sorten();
+  const summe = liste => so.map((s, i) => liste.reduce((n, b) => n + b.mengen[i], 0));
+  const clubs = lesen(BLATT.clubs).map(c => {
+    const st = clubStand(c['Kürzel'], so);
+    const best = st.bestellungen.filter(b => b.status === 'bestellt');
+    return { name: c.Name, mitglieder: st.mitglieder.filter(m => m.aktiv).length, bestellungen: best.length,
+             offen: st.summen.offen, pruefen: st.summen['prüfen'], bestellt: summe(best),
+             abgeholt: summe(best.filter(b => b.abgeholt)) };
+  });
+  const gesamt = { name: 'Alle Clubs', mitglieder: 0, bestellungen: 0, offen: 0, pruefen: 0,
+                   bestellt: so.map(() => 0), abgeholt: so.map(() => 0) };
+  clubs.forEach(c => {
+    ['mitglieder', 'bestellungen', 'offen', 'pruefen'].forEach(k => { gesamt[k] += c[k]; });
+    so.forEach((s, i) => { gesamt.bestellt[i] += c.bestellt[i]; gesamt.abgeholt[i] += c.abgeholt[i]; });
+  });
+  return { sorten: so, clubs: clubs, gesamt: gesamt, jetzt: jetzt('dd.MM.yyyy HH:mm') };
+}
+
+function gesamtseite() {
+  const d = gesamtStand();
+  const kartons = n => [Math.floor(n / 6) ? `${Math.floor(n / 6)} Karton${n >= 12 ? 's' : ''}` : '',
+                        n % 6 ? `${n % 6} Fl.` : ''].filter(Boolean).join(' + ') || '0';
+  const zeile = (c, fett) => `<tr${fett ? ' class="g"' : ''}><td>${esc(c.name)}<small>${c.bestellungen} Bestellung${c.bestellungen === 1 ? '' : 'en'} · ${c.offen} ohne Antwort${c.pruefen ? ` · ${c.pruefen} zu prüfen` : ''}</small></td>`
+    + d.sorten.map((s, i) => `<td>${c.bestellt[i]}<small>${c.abgeholt[i]} abgeholt</small></td>`).join('')
+    + `<td>${c.bestellt.reduce((a, b) => a + b, 0)}</td></tr>`;
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+body{margin:0;background:#F4F6F9;color:#1D2733;font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{background:#1F3864;color:#fff;padding:16px}header p{margin:0;color:#C0975B;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+header h1{margin:2px 0 0;font-size:21px}main{max-width:900px;margin:0 auto;padding:12px 16px 40px}
+.rahmen{overflow-x:auto;background:#fff;border:1px solid #DCE1E8;border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:520px}th,td{padding:8px 10px;border-bottom:1px solid #DCE1E8;text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}th{font-size:12px;color:#6B7683;font-weight:600}
+td small{display:block;color:#6B7683;font-size:12px}tr.g td{font-weight:700;color:#1F3864;border-top:3px solid #1F3864;border-bottom:0}
+h2{font-size:15px;color:#1F3864;margin:22px 0 6px;border-bottom:2px solid #C0975B;padding-bottom:3px}
+ul{list-style:none;margin:0;padding:0;background:#fff;border:1px solid #DCE1E8;border-radius:10px}li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid #DCE1E8}li:last-child{border-bottom:0}
+li b{color:#1F3864}li span{color:#6B7683;white-space:nowrap;text-align:right}.fuss{color:#6B7683;font-size:12px;margin-top:16px}
+</style></head><body><header><p>SERVINO Gesamtsicht</p><h1>Alle Serviceclubs</h1></header><main>
+<p class="fuss" style="margin-top:0">Stand ${esc(d.jetzt)}. Flaschen aus Bestellungen auf „bestellt“, ohne zu prüfende.</p>
+<div class="rahmen"><table><tr><th>Club</th>${d.sorten.map(s => `<th>${esc(s.name)}</th>`).join('')}<th>Flaschen</th></tr>
+${d.clubs.map(c => zeile(c)).join('')}${zeile(d.gesamt, true)}</table></div>
+<h2>Sammelbestellung beim Weingut</h2>
+<ul>${d.sorten.map((s, i) => `<li><div><b>${esc(s.name)}</b>: ${d.gesamt.bestellt[i]} Flaschen</div><span>${kartons(d.gesamt.bestellt[i])}</span></li>`).join('')}</ul>
+<h2>Noch auszugeben</h2>
+<ul>${d.sorten.map((s, i) => `<li><b>${esc(s.name)}</b><span>${d.gesamt.bestellt[i] - d.gesamt.abgeholt[i]} Flaschen</span></li>`).join('')}</ul>
+<p class="fuss">Namen und Beträge stehen nur in der Verwaltung des jeweiligen Clubs.</p></main></body></html>`;
+  return HtmlService.createHtmlOutput(html).setTitle('SERVINO Gesamtsicht')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
 // ------------------------------------------------------------------ Mails
 
 const WOCHENTAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -576,9 +652,9 @@ function euro(n) {
 }
 
 // Mail an ein Mitglied: Einladung mit dem persönlichen Link oder Erinnerung an die Offenen.
-function mailBauen(c, m, art, zusatz, so) {
-  const sie = c.Anrede === 'sie';
-  const t = sie ? {
+// Texte der Mail in Du- oder Sie-Form, gemeinsam für die Mail aus der Web-App und den Mail-Knopf je Mitglied.
+function mailTexte(c, art) {
+  return c.Anrede === 'sie' ? {
     betreff: art === 'Erinnerung' ? `${c.Name}: Erinnerung an SERVINO` : `${c.Name}: Ihr persönlicher Bestelllink für SERVINO`,
     einleitung: art === 'Erinnerung'
       ? 'vor einigen Tagen haben Sie Ihren persönlichen Link für SERVINO bekommen. Von Ihnen ist bisher noch keine Bestellung eingegangen.'
@@ -597,6 +673,24 @@ function mailBauen(c, m, art, zusatz, so) {
     ersatz: 'Falls der Knopf nicht reagiert, kopiere diesen Link in deinen Browser:',
     gruss: 'Liebe Grüße',
   };
+}
+
+// Schlichte Fassung der Einladung für den Mail-Knopf in der Verwaltung: geht aus dem Postfach des Sekretärs,
+// deshalb ohne Tageslimit, aber ohne Preistabelle und gestalteten Knopf.
+function mailKlartext(c, m) {
+  const t = mailTexte(c, 'Einladung');
+  const datum = datumLang(c.Bestellschluss);
+  const teile = [gruss(m, c.Anrede === 'sie' ? 'sie' : 'du') + ',', t.einleitung, link(m)];
+  const termine = [datum ? t.schluss(datum) : '', c.Abholung ? `Abholung: ${c.Abholung}.` : '', c.Bezahlung || '']
+    .filter(Boolean).join(' ');
+  if (termine) teile.push(termine);
+  teile.push(t.nichts, t.gruss + (c['Sekretär'] ? '\n' + c['Sekretär'] : ''));
+  return { betreff: t.betreff, text: teile.join('\n\n') };
+}
+
+function mailBauen(c, m, art, zusatz, so) {
+  const sie = c.Anrede === 'sie';
+  const t = mailTexte(c, art);
   const ziel = link(m);
   const datum = datumLang(c.Bestellschluss);
   const absatz = s => `<p style="margin:0 0 12px">${s}</p>`;

@@ -20,6 +20,19 @@ const SA = c.clubFinden("TEST")["Schlüssel"], SB = c.clubFinden("B")["Schlüsse
 c.vwImport("TEST", SA, "Vorname\tNachname\tE-Mail\tMobil\tAnrede\nHerbert\tStraßl\therbert@example.org\t0664 1234567\tLieber Herbert\n"
   + "Maria\tMaier\tmaria@example.org\t\t\nJosef\tGruber\t\t+43 660 1112223\t", true);
 c.vwImport("B", SB, "Anna\tBerger\tanna@example.org\nFranz\tBauer\tfranz@example.org", true);
+// Bestellungen für Abrechnung und Gesamtsicht: Straßl abgeholt und danach zusätzlich bestellt, Maier abgeholt.
+const zeichen = Object.fromEntries(c.mitgliederVon("TEST").map(m => [m.Nachname, m.Zeichen]));
+const bestellen = (k, mengen) => c.doPost({ postData: { contents: JSON.stringify({ k, mengen, summe: "", anmerkung: "" }) } });
+g.jetzt = "2026-10-20T10:00:00+02:00";
+bestellen(zeichen["Straßl"], { servizzante: 2, red: 8 });
+bestellen(zeichen.Maier, { servizzante: 7, red: 1, white: 13 });
+bestellen(c.mitgliederVon("B")[0].Zeichen, { white: 6 });
+g.jetzt = "2026-11-12T19:30:00+01:00";
+c.vwAbholen("TEST", SA, 1, "abgeholt");
+c.vwAbholen("TEST", SA, 2, "abgeholt");
+g.jetzt = "2026-11-13T09:00:00+01:00";
+bestellen(zeichen["Straßl"], { red: 6 });
+g.jetzt = null;
 // Seite des Mitglieds zeigt auf den Nachbau, nicht auf Google.
 const SEITE_ALT = "https://hanspeter-meissl.github.io/servino/";
 
@@ -72,7 +85,15 @@ http.createServer(async (req, res) => {
       }
     }
     if (url.pathname === "/einstellung.js") return senden(200, ARTEN[".js"], `const GOOGLE = "${BASIS}/exec";`);
-    if (url.pathname === "/mails") return senden(200, "application/json", JSON.stringify(g.mails, null, 1));
+    // Für die Prüfung der Excel-Datei: die Seite schickt die Mappe als Base64, sie landet im Temp-Ordner.
+    if (url.pathname === "/speichern" && req.method === "POST") {
+      const d = JSON.parse(body);
+      const ziel = path.join(require("os").tmpdir(), "servino-test", path.basename(d.name));
+      fs.mkdirSync(path.dirname(ziel), { recursive: true });
+      fs.writeFileSync(ziel, Buffer.from(d.base64, "base64"));
+      return senden(200, "application/json", JSON.stringify({ ziel }));
+    }
+    if (url.pathname === "/mails")return senden(200, "application/json", JSON.stringify(g.mails, null, 1));
     if (url.pathname === "/blatt") return senden(200, "application/json", JSON.stringify(g.blatt(url.searchParams.get("n"))));
     const datei = path.join(WURZEL, decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname));
     if (!datei.startsWith(WURZEL) || !fs.existsSync(datei) || fs.statSync(datei).isDirectory()) return senden(404, "text/plain", "fehlt");
@@ -84,5 +105,6 @@ http.createServer(async (req, res) => {
   console.log(`Nachbau läuft auf ${BASIS}`);
   console.log(`Verwaltung TEST: ${BASIS}/exec?verwaltung=TEST&s=${SA}`);
   console.log(`Verwaltung B:    ${BASIS}/exec?verwaltung=B&s=${SB}`);
+  console.log(`Gesamtsicht:     ${BASIS}/exec?gesamt=${g.props.GESAMT}`);
   [...c.mitgliederVon("TEST"), ...c.mitgliederVon("B")].forEach(m => console.log(`${m.Club} ${m["Nr."]} ${m.Vorname} ${m.Nachname}: ${BASIS}/?k=${m.Zeichen}`));
 });

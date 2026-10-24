@@ -102,6 +102,8 @@ function laden(optionen = {}) {
     },
   };
   vm.createContext(ctx);
+  // Im Apps-Script-Projekt teilen sich alle Dateien einen Geltungsbereich; preis.js liegt dort als „preis“.
+  vm.runInContext(fs.readFileSync(path.join(GOOGLE, "..", "preis.js"), "utf8"), ctx, { filename: "preis.js" });
   vm.runInContext(fs.readFileSync(path.join(GOOGLE, "Code.gs"), "utf8"), ctx, { filename: "Code.gs" });
   zustand.ctx = ctx;
   zustand.props = props;

@@ -10,9 +10,9 @@
   header { background: var(--navy); color: #fff; padding: 16px 16px 0; }
   header p { margin: 0; color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
   header h1 { margin: 2px 0 10px; font-size: 21px; }
-  nav { display: flex; gap: 2px; overflow-x: auto; }
+  nav { display: flex; justify-content: space-between; max-width: 720px; overflow-x: auto; }
   nav button { flex: none; background: transparent; color: #fff; opacity: .75; border: 0; border-bottom: 3px solid transparent;
-               font: inherit; font-size: 15px; font-weight: 600; padding: 8px 9px 9px; cursor: pointer; }
+               font: inherit; font-size: 14px; font-weight: 600; padding: 8px 5px 9px; cursor: pointer; }
   nav button.an { opacity: 1; border-bottom-color: var(--gold); }
   main { max-width: 720px; margin: 0 auto; padding: 12px 16px 48px; }
   [hidden] { display: none !important; }
@@ -72,7 +72,8 @@
     <button data-reiter="stand" class="an">Stand</button>
     <button data-reiter="mitglieder">Mitglieder</button>
     <button data-reiter="versand">Versand</button>
-    <button data-reiter="einstellungen">Einstellungen</button>
+    <button data-reiter="abrechnung">Abrechnung</button>
+    <button data-reiter="einstellungen">Club</button>
   </nav>
 </header>
 <main>
@@ -80,6 +81,7 @@
   <section id="stand" hidden></section>
   <section id="mitglieder" hidden></section>
   <section id="versand" hidden></section>
+  <section id="abrechnung" hidden></section>
   <section id="einstellungen" hidden></section>
 </main>
 <div id="meldung" hidden></div>
@@ -126,8 +128,9 @@
 
   function zeichnen() {
     if (!daten) return;
-    ["stand", "mitglieder", "versand", "einstellungen"].forEach(n => { document.getElementById(n).hidden = n !== reiter; });
-    ({ stand: standZeichnen, mitglieder: mitgliederZeichnen, versand: versandZeichnen, einstellungen: einstellungenZeichnen })[reiter]();
+    ["stand", "mitglieder", "versand", "abrechnung", "einstellungen"].forEach(n => { document.getElementById(n).hidden = n !== reiter; });
+    ({ stand: standZeichnen, mitglieder: mitgliederZeichnen, versand: versandZeichnen, abrechnung: abrechnungZeichnen,
+       einstellungen: einstellungenZeichnen })[reiter]();
   }
 
   const statusKlasse = s => s === "bestellt" ? "bestellt" : s === "offen" ? "offen" : s === "prüfen" ? "pruefen" : "";
@@ -174,6 +177,11 @@
     return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
   }
 
+  // Mail aus dem eigenen Postfach des Sekretärs, ohne Tageslimit. Text und Betreff kommen fertig von der Web-App.
+  function mailto(m) {
+    return `mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(m.mail.betreff)}&body=${encodeURIComponent(m.mail.text)}`;
+  }
+
   function mitgliederZeichnen() {
     const aktive = daten.mitglieder.filter(m => m.aktiv), weg = daten.mitglieder.filter(m => !m.aktiv);
     const eintrag = m => {
@@ -181,7 +189,7 @@
       return `<li class="${m.aktiv ? "" : "weg"}"><div><b>${esc(m.vorname)} ${esc(m.nachname)}</b> <span class="mk ${statusKlasse(m.status)}">${esc(m.status)}</span><i>Nr. ${m.nr}</i></div>
         <div class="daten">${esc(m.email || "keine E-Mail")}${m.mobil ? " · " + esc(m.mobil) : ""}${m.anrede ? " · Anrede „" + esc(m.anrede) + "“" : ""}</div>
         <div class="daten">${m.eingeladen ? "Einladung am " + esc(zeitAnzeige(m.eingeladen)) : "noch keine Einladung"}${m.erinnert ? " · Erinnerung am " + esc(zeitAnzeige(m.erinnert)) : ""}</div>
-        <div class="knoepfe">${m.aktiv ? `<button class="b rand" data-kopieren="${esc(m.link)}">Link kopieren</button>${wa ? `<a class="b rand" href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button class="b leise" data-aktiv="${m.nr}" data-wert="0">Entfernen</button>` : `<button class="b leise" data-aktiv="${m.nr}" data-wert="1">Wieder aufnehmen</button>`}</div></li>`;
+        <div class="knoepfe">${m.aktiv ? `<button class="b rand" data-kopieren="${esc(m.link)}">Link kopieren</button>${m.mail ? `<a class="b rand" href="${esc(mailto(m))}">Mail</a>` : ""}${wa ?`<a class="b rand" href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button class="b leise" data-aktiv="${m.nr}" data-wert="0">Entfernen</button>` : `<button class="b leise" data-aktiv="${m.nr}" data-wert="1">Wieder aufnehmen</button>`}</div></li>`;
     };
     document.getElementById("mitglieder").innerHTML = `
       <h2>Liste aus Excel einfügen</h2>
@@ -256,6 +264,113 @@
         <p><b>${e.gesendet} gesendet.</b>${e.uebrig ? ` ${e.uebrig} sind wegen des Tageslimits noch offen. Bitte morgen noch einmal auf denselben Knopf tippen, dann gehen nur die übrigen.` : ""}</p>
         ${e.fehler.length ? `<p>${e.fehler.map(esc).join("<br>")}</p>` : ""}</div>`;
     });
+  }
+
+  // ------------------------------------------------------------ Abrechnung
+  const euro = n => n.toFixed(2).replace(".", ",") + " €";
+  const datum = t => { const m = String(t).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}.${m[2]}.${m[1]}` : ""; };
+
+  function abrechnungZeichnen() {
+    const a = daten.abrechnung;
+    const sorten = z => daten.sorten.map((s, i) => z.mengen[i] ? `${z.mengen[i]} ${s.name}` : "").filter(Boolean).join(", ");
+    document.getElementById("abrechnung").innerHTML = `
+      <p class="klein" style="margin-top:12px">Abzubuchen sind nur abgeholte Bestellungen. Die Excel-Datei rechnet Flaschen, Kartons und Beträge mit Formeln aus der Preistabelle und hat eine Spalte „Abgebucht“ zum Abhaken.</p>
+      ${a.pruefen.length ? `<div class="bericht warn">Noch zu prüfen und deshalb nicht enthalten: ${esc(a.pruefen.join(", "))}</div>` : ""}
+      <div class="knoepfe"><button class="b voll" id="excel" ${a.abgeholt.length || a.offen.length ? "" : "disabled"}>Abrechnung als Excel herunterladen</button></div>
+      <h2>Abgeholt <small>${a.abgeholt.length}</small></h2>
+      ${a.abgeholt.length ? `<ul>${a.abgeholt.map(z => `<li>${esc(z.name)}${z.art === "zusätzliche" ? " <small>zusätzliche Bestellung</small>" : ""}<i>${euro(z.betrag)}</i><div class="daten">${esc(sorten(z))} · abgeholt ${esc(datum(z.abgeholt))}</div></li>`).join("")}
+        <li><b>Summe</b><i><b>${euro(a.summe)}</b></i></li></ul>` : `<p class="klein">Noch nichts abgeholt.</p>`}
+      ${a.offen.length ? `<h2>Bestellt, noch nicht abgeholt <small>${a.offen.length}</small></h2><ul>${a.offen.map(z => `<li>${esc(z.name)}<i>${euro(z.betrag)}</i><div class="daten">${esc(sorten(z))}</div></li>`).join("")}</ul>
+        <p class="fuss">Diese Beträge sind noch nicht abzubuchen. Sie stehen in der Excel-Datei ohne Betrag.</p>` : ""}`;
+    document.getElementById("excel").onclick = e => excelLaden(e.currentTarget);
+  }
+
+  // SheetJS erst beim ersten Klick laden, damit die Verwaltung schnell öffnet.
+  function excelLaden(knopf) {
+    const fertig = () => {
+      try {
+        XLSX.writeFile(abrechnungsMappe(), `SERVINO Abrechnung ${daten.club.name}.xlsx`);
+      } catch (e) {
+        meldung("Excel-Datei nicht erstellt: " + e.message);
+      }
+    };
+    if (window.XLSX) return fertig();
+    knopf.disabled = true;
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = () => { knopf.disabled = false; fertig(); };
+    s.onerror = () => { knopf.disabled = false; meldung("Die Excel-Bibliothek ließ sich nicht laden. Bitte später noch einmal versuchen."); };
+    document.head.appendChild(s);
+  }
+
+  // Mappe wie die Abrechnung des Club 41: oben die Preistabelle, darunter je abgeholter Bestellung eine Zeile.
+  // Flaschen, Kartons, Betrag und Summen sind Formeln über die Mengen und die Preistabelle.
+  function abrechnungsMappe() {
+    const a = daten.abrechnung, so = daten.sorten, n = so.length;
+    const sp = i => { let s = ""; i++; while (i) { s = String.fromCharCode(65 + (i - 1) % 26) + s; i = Math.floor((i - 1) / 26); } return s; };
+    const blatt = {};
+    let zeilen = 0;
+    const setze = (zeile, spalte, wert) => {
+      const ref = sp(spalte) + (zeile + 1);
+      if (wert && typeof wert === "object") blatt[ref] = Object.assign({ t: "n" }, wert);
+      else blatt[ref] = { t: typeof wert === "number" ? "n" : "s", v: wert };
+      zeilen = Math.max(zeilen, zeile + 1);
+    };
+    const geld = '#,##0.00 "€"';
+    setze(0, 0, `SERVINO-Abrechnung ${daten.club.name}`);
+    setze(1, 0, `Stand ${daten.jetzt}. Abzubuchen sind nur abgeholte Bestellungen.`);
+    ["Sorte", "Einzelpreis", "Kartonpreis je Flasche", "Karton mit 6"].forEach((k, i) => setze(3, i, k));
+    so.forEach((s, i) => {
+      const z = 4 + i;
+      setze(z, 0, s.name);
+      setze(z, 1, { v: s.einzel, z: geld });
+      setze(z, 2, { v: s.karton, z: geld });
+      setze(z, 3, { f: `C${z + 1}*6`, v: s.karton * 6, z: geld });
+    });
+    const preis = i => ({ einzel: `$B$${5 + i}`, karton: `$C$${5 + i}` });
+    const kopf = 5 + n;
+    const sFl = 2 + n, sKa = 3 + n, sBe = 4 + n;
+    ["Nr.", "Name", ...so.map(s => s.name), "Flaschen", "Kartons", "Betrag", "Bestellung", "Abgeholt", "Abgebucht"]
+      .forEach((k, i) => setze(kopf, i, k));
+    const mengen = (z, r) => {
+      setze(z, 0, r.nr);
+      setze(z, 1, r.name);
+      so.forEach((s, i) => setze(z, 2 + i, r.mengen[i]));
+      const zellen = so.map((s, i) => sp(2 + i) + (z + 1));
+      setze(z, sFl, { f: zellen.join("+"), v: r.flaschen });
+      setze(z, sKa, { f: zellen.map(c => `INT(${c}/6)`).join("+"), v: r.kartons });
+      return zellen;
+    };
+    let z = kopf + 1;
+    const erste = z;
+    a.abgeholt.forEach(r => {
+      const zellen = mengen(z, r);
+      setze(z, sBe, { f: zellen.map((c, i) => `INT(${c}/6)*6*${preis(i).karton}+MOD(${c},6)*${preis(i).einzel}`).join("+"), v: r.betrag, z: geld });
+      setze(z, sBe + 1, r.art === "zusätzliche" ? "zusätzliche" : "erste");
+      setze(z, sBe + 2, datum(r.abgeholt));
+      z++;
+    });
+    const letzte = z - 1;
+    setze(z, 1, "Summe");
+    // Mit gerechnetem Wert, damit die Summe auch ohne Neuberechnung in Excel stimmt.
+    const wert = s => a.abgeholt.reduce((x, r) => x + (s < sFl ? r.mengen[s - 2] : s === sFl ? r.flaschen : s === sKa ? r.kartons : r.betrag), 0);
+    for (let s = 2; s <= sBe; s++) {
+      const summe = { v: wert(s) };
+      if (a.abgeholt.length) summe.f = `SUM(${sp(s)}${erste + 1}:${sp(s)}${letzte + 1})`;
+      if (s === sBe) summe.z = geld;
+      setze(z, s, summe);
+    }
+    z += 2;
+    if (a.offen.length) {
+      setze(z, 0, "Bestellt, noch nicht abgeholt (nicht abbuchen)");
+      z++;
+      a.offen.forEach(r => { mengen(z, r); setze(z, sBe + 1, r.art === "zusätzliche" ? "zusätzliche" : "erste"); z++; });
+    }
+    blatt["!ref"] = `A1:${sp(sBe + 3)}${zeilen}`;
+    blatt["!cols"] = [{ wch: 6 }, { wch: 26 }, ...so.map(() => ({ wch: 12 })), { wch: 9 }, { wch: 8 }, { wch: 12 }, { wch: 12 }, { wch: 11 }, { wch: 11 }];
+    const mappe = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(mappe, blatt, "Abrechnung");
+    return mappe;
   }
 
   // ------------------------------------------------------------ Einstellungen

@@ -130,6 +130,14 @@ d = g.get({ k: zS });
 pruefe(d.bestellung.nummer === 2 && d.bestellung.abschnitte.length === 2 && d.bestellung.abschnitte[0].abgeholt,
        "Bestellung nach der Abholung ist eine neue");
 wirft(() => c.vwAbholen("TEST", SA, 1, "zurückgenommen"), /neu bestellt/, "Rücknahme nach neuer Bestellung");
+// Abrechnung: nur die abgeholte erste Bestellung wird abgebucht, die zusätzliche steht ohne Abholung darunter.
+let ar = c.vwLaden("TEST", SA).abrechnung;
+pruefe(ar.abgeholt.length === 1 && ar.abgeholt[0].betrag === 166 && ar.abgeholt[0].kartons === 1 && ar.summe === 166,
+       "Abrechnung: Straßl 2 Servizzante + 8 Red Seven = 166 €, 1 Karton");
+pruefe(ar.offen.length === 1 && ar.offen[0].betrag === 96 && ar.offen[0].art === "zusätzliche", "zusätzliche Bestellung noch offen, 96 €");
+pruefe(ar.pruefen.join() === "Maria Maier", "Bestellung auf prüfen wird genannt");
+pruefe(c.vwLaden("B", SB).abrechnung.summe === 0, "Club B ohne Abholung: nichts abzubuchen");
+
 // Eine Markierung, die nicht über die Verwaltung kam (etwa von Hand im Blatt), trennt keine Bestellung ab.
 g.tabelle().getSheetByName("Abholung").appendRow(["2026-11-12 19:40:00", "TEST", "2", "abgeholt"]);
 const m2 = c.vwLaden("TEST", SA).stand.mitglieder.find(m => m.nr === 2);
@@ -172,6 +180,25 @@ pruefe(s.ergebnis.gesendet === 2 && mb[0].htmlBody.includes("Ihr persönlicher L
        && mb[0].htmlBody.includes("Mit freundlichen Grüßen<br>Maria Huber"), "Club B: Sie-Form und eigener Name");
 v = c.vwLaden("TEST", SA);
 pruefe(v.mitglieder.find(m => m.nr === 1).eingeladen && v.mitglieder.find(m => m.nr === 4).erinnert, "Versand je Mitglied vermerkt");
+const mk = v.mitglieder.find(m => m.nr === 1).mail;
+pruefe(mk && mk.text.startsWith("Lieber Herbert,") && mk.text.includes(`?k=${zS}`) && mk.text.includes("Liebe Grüße\nHanspeter")
+       && mk.betreff === "Testclub Grieskirchen: Dein persönlicher Bestelllink für SERVINO", "Mail-Knopf: Text mit Gruß, Link und Name");
+pruefe(v.mitglieder.find(m => m.nr === 3).mail === null, "ohne E-Mail kein Mail-Knopf");
+pruefe(c.vwLaden("B", SB).mitglieder[0].mail.text.includes("Mit freundlichen Grüßen\nMaria Huber"), "Mail-Knopf in Sie-Form");
+
+// ---------------------------------------------------------------- Gesamtsicht
+const GK = g.props.GESAMT;
+pruefe(/^[0-9a-f]{24}$/.test(GK) && g.logs.some(l => l.includes("?gesamt=" + GK)), "Schlüssel der Gesamtsicht vergeben");
+pruefe(g.get({ gesamt: "falsch" }).dienst === "SERVINO Clubs" && g.get({ gesamt: SA }).dienst === "SERVINO Clubs",
+       "Gesamtsicht nicht mit falschem oder Clubschlüssel");
+const gs = c.gesamtStand();
+pruefe(gs.clubs.length === 2 && gs.clubs[0].bestellt.join() === "2,14,0" && gs.clubs[1].bestellt.join() === "0,12,0",
+       "Gesamt je Club: TEST 2/14/0, Club B 0/12/0");
+pruefe(gs.gesamt.bestellt.join() === "2,26,0" && gs.gesamt.abgeholt.join() === "2,8,0" && gs.gesamt.pruefen === 1,
+       "Gesamt: 2/26/0 bestellt, 2/8/0 abgeholt, eine zu prüfen");
+const gseite = g.get({ gesamt: GK });
+pruefe(gseite.art === "html" && gseite.inhalt.includes("Club B") && gseite.inhalt.includes("4 Kartons + 2 Fl.") && gseite.inhalt.includes("<span>2 Fl.</span>")
+       && !gseite.inhalt.includes("Straßl") && !gseite.inhalt.includes("€"), "Gesamtseite ohne Namen und Beträge");
 const gf = laden({ mailFehler: o => o.to === "maria.maier@example.org" });
 gf.props.WEBAPP = "x";
 gf.ctx.einrichten();
