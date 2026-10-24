@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SERVINO bestellen</title>
+<meta name="description" content="Persönlicher Bestelllink für SERVINO, den Wein der sieben Grieskirchner Serviceclubs.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="de_AT">
+<meta property="og:site_name" content="SERVINO">
+<meta property="og:title" content="SERVINO bestellen">
+<meta property="og:description" content="Persönlicher Bestelllink für SERVINO, den Wein der sieben Grieskirchner Serviceclubs.">
+<meta property="og:url" content="https://hanspeter-meissl.github.io/servino/">
+<meta property="og:image" content="https://hanspeter-meissl.github.io/servino/bilder/vorschau.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Servizzante, Servino Red Seven und Servino White Seven">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --navy: #1F3864; --gold: #C0975B; --ink: #1D2733; --grau: #6B7683;
+    --linie: #DCE1E8; --hell: #F4F6F9; --warn: #9A3412; --warn-hell: #FFF4E5;
+    --rand: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fff; color: var(--ink);
+    font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 0 var(--rand) 40px; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 0 12px; border-bottom: 3px solid var(--navy); min-height: 76px; }
+  header img { width: 48px; height: 48px; object-fit: contain; }
+  header .club { font-weight: 700; color: var(--navy); line-height: 1.2; }
+  header .jahr { font-size: 12px; letter-spacing: .12em; color: var(--gold); font-weight: 700; }
+  h1 { font: 400 30px/1.2 Georgia, serif; color: var(--navy); margin: 22px 0 6px; }
+  .anrede { font-size: 18px; margin: 4px 0 10px; }
+  .anrede b { color: var(--navy); }
+  .titelbild { width: 100%; border-radius: 6px; display: block; margin: 8px 0 14px; }
+  p { margin: 0 0 12px; }
+  .regel { background: var(--hell); border-top: 3px solid var(--gold); padding: 12px 14px; font-size: 14px; margin: 16px 0 20px; }
+  .regel p { margin: 0 0 6px; } .regel p:last-child { margin: 0; }
+  .laden { color: var(--grau); padding: 30px 0; text-align: center; }
+
+  .sorte { display: grid; grid-template-columns: 44px 1fr auto; gap: 4px 12px; align-items: center;
+           padding: 14px 0; border-bottom: 1px solid var(--linie); }
+  .sorte img { grid-row: span 2; width: 44px; height: 140px; object-fit: contain; }
+  .sorte .name { font-weight: 700; color: var(--navy); }
+  .sorte .art { font-size: 13px; color: var(--grau); }
+  .sorte .preise { font-size: 13px; color: var(--grau); }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button { width: 38px; height: 38px; border: 1px solid var(--linie); background: #fff; border-radius: 6px;
+                    font-size: 20px; color: var(--navy); cursor: pointer; }
+  .stepper input { width: 52px; height: 38px; text-align: center; font-size: 17px; border: 1px solid var(--linie); border-radius: 6px; }
+  .betrag { text-align: right; font-variant-numeric: tabular-nums; }
+  .betrag .wert { font-weight: 700; color: var(--navy); }
+  .betrag .weg { font-size: 12px; color: var(--grau); }
+
+  .summe { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0 6px;
+           border-top: 3px solid var(--navy); margin-top: -1px; }
+  .summe .text { font-weight: 700; color: var(--navy); }
+  .summe .wert { font-size: 24px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .flaschen { color: var(--grau); font-size: 14px; margin-bottom: 10px; }
+  .hinweis { background: var(--warn-hell); color: var(--warn); padding: 10px 12px; border-radius: 6px; font-size: 14px; margin: 8px 0; }
+  [hidden] { display: none !important; }
+
+  label.anm { display: block; font-weight: 700; color: var(--navy); margin: 18px 0 6px; }
+  textarea { width: 100%; min-height: 70px; padding: 8px 10px; border: 1px solid var(--linie); border-radius: 6px; font: inherit; }
+
+  .los { display: block; width: 100%; margin: 18px 0 8px; padding: 14px; border: 0; border-radius: 6px;
+         background: var(--navy); color: #fff; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+  .los:disabled { background: #A9B3C1; cursor: not-allowed; }
+  .naechst { font-size: 14px; color: var(--grau); }
+  .nichts { display: inline-block; margin-top: 14px; color: var(--navy); font-size: 14px; }
+  h2 { font: 400 24px/1.25 Georgia, serif; color: var(--navy); margin: 24px 0 6px; }
+  .fuer2 { color: var(--grau); margin: 0 0 12px; font-size: 14px; }
+  .liste { width: 100%; border-collapse: collapse; border-top: 3px solid var(--gold); margin: 6px 0 12px; }
+  .liste td { padding: 10px 0; border-bottom: 1px solid var(--linie); vertical-align: top; }
+  .liste td.betrag { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--navy); padding-left: 12px; }
+  .liste .name { font-weight: 700; color: var(--navy); }
+  .liste .weg { font-size: 13px; color: var(--grau); }
+  .liste tr.gesamt td { border-top: 3px solid var(--navy); border-bottom: 0; font-size: 18px; font-weight: 700; color: var(--navy); }
+  .anm-anzeige { font-size: 14px; color: var(--grau); background: var(--hell); padding: 10px 12px; border-radius: 6px; }
+  .zurueck { display: block; width: 100%; margin: 0 0 8px; padding: 13px; border: 1px solid var(--navy); border-radius: 6px;
+             background: #fff; color: var(--navy); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .los.sendet { background: #A9B3C1; cursor: progress; }
+  .frueher { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--linie); font-size: 14px; color: var(--grau); }
+  .frueher p { margin: 0 0 6px; }
+  .frueher b { color: var(--navy); }
+  footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--linie); font-size: 13px; color: var(--grau); }
+  @media (max-width: 380px) {
+    .sorte { grid-template-columns: 36px 1fr; }
+    .sorte img { width: 36px; height: 120px; grid-row: span 3; }
+    .betrag { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img id="wappen" alt="" hidden>
+    <div><div class="club" id="clubname">SERVINO</div><div class="jahr">SERVINO-BESTELLUNG</div></div>
+  </header>
+
+  <h1>SERVINO bestellen</h1>
+  <p class="anrede" id="anrede" hidden></p>
+  <p class="laden" id="laden">Die Bestellseite wird geladen …</p>
+  <div class="hinweis" id="ladefehler" hidden></div>
+
+  <div id="einleitung" hidden>
+    <img class="titelbild" src="bilder/flaschen.jpg" alt="Servizzante, Servino Red Seven und Servino White Seven">
+    <p>SERVINO ist der Wein der sieben Grieskirchner Serviceclubs, abgefüllt vom Weingut Hagn. Der Erlös geht an karitative Zwecke.</p>
+    <div class="regel">
+      <p id="regel-karton"></p>
+      <p id="regel-termine"></p>
+    </div>
+  </div>
+
+  <section id="schritt-bisher" hidden>
+    <h2 id="bisher-titel"></h2>
+    <p class="fuer2" id="bisher-zeit"></p>
+    <table class="liste" id="bisher-liste"></table>
+    <p class="anm-anzeige" id="bisher-anm" hidden></p>
+    <div class="hinweis" id="bisher-pruefen" hidden></div>
+    <p id="bisher-text"></p>
+    <button class="los" id="aendern" hidden>Bestellung ändern</button>
+    <div class="frueher" id="bisher-frueher" hidden></div>
+  </section>
+
+  <section id="schritt-bestellen" hidden>
+    <div id="sorten"></div>
+    <div class="summe"><span class="text">Bestellsumme</span><span class="wert" id="summe">0,00 €</span></div>
+    <div class="flaschen" id="flaschen">0 Flaschen</div>
+    <div class="hinweis" id="hinweis" hidden></div>
+    <label class="anm" for="anmerkung">Anmerkung (freiwillig)</label>
+    <textarea id="anmerkung" maxlength="500" autocomplete="off"></textarea>
+    <button class="los" id="los" disabled>Bestellung prüfen</button>
+    <p class="naechst" id="naechst"></p>
+    <a class="nichts" href="#" id="nichts">Ich bestelle diesmal nichts</a>
+  </section>
+
+  <section id="schritt-pruefen" hidden>
+    <h2 id="pruefen-titel"></h2>
+    <table class="liste" id="liste"></table>
+    <p class="anm-anzeige" id="anm-anzeige" hidden></p>
+    <button class="los" id="abschicken">Bestellung abschicken</button>
+    <button class="zurueck" id="zurueck">Zurück zur Bestellung</button>
+    <div class="hinweis" id="fehler" hidden></div>
+  </section>
+
+  <section id="schritt-danke" hidden>
+    <h2 id="danke-titel"></h2>
+    <p id="danke-text"></p>
+    <table class="liste" id="danke-liste"></table>
+    <p class="naechst" id="danke-jederzeit"></p>
+  </section>
+
+  <footer id="fragen" hidden></footer>
+</main>
+
+<script src="einstellung.js"></script>
+<script src="preis.js"></script>
+<script src="texte.js"></script>
+<script>
+  // Persönlicher Link: ?k=<Zeichen>. Das Zeichen ist je Mitglied zufällig; alles andere, auch Club,
+  // Sorten, Preise und Anrede, kommt beim Öffnen von der Web-App (google/Code.gs, mitgliedDaten).
+  const zeichen = (new URLSearchParams(location.search).get("k") || "").trim().slice(0, 40);
+  const euro = n => n.toLocaleString("de-AT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  const WOCHENTAGE = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+  const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+  function datumLang(t) {
+    const m = String(t || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return "";
+    const tag = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay();
+    return `${WOCHENTAGE[tag]}, ${+m[3]}. ${MONATE[+m[2] - 1]} ${m[1]}`;
+  }
+  function zeitText(t) {
+    const m = String(t).match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2})/);
+    return m ? `${m[3]}.${m[2]}.${m[1]} um ${m[4]}` : "";
+  }
+
+  let D = null;       // Antwort der Web-App
+  let T = TEXTE.du;   // Texte in der Form des Clubs
+  let SORTEN = [];
+  let MINDEST = 6;
+  let felder = [];
+  const text = s => s.replace(/\{sekretaer\}/g, D ? D.club.sekretaer : "");
+  const $ = id => document.getElementById(id);
+
+  // Der Gruß kommt fertig von der Web-App („Lieber Herbert“), dahinter der Satz zum Schritt.
+  function anredeSetzen(satz) {
+    const a = $("anrede");
+    a.replaceChildren(Object.assign(document.createElement("b"), { textContent: D.mitglied.gruss }), ", " + satz);
+    a.hidden = false;
+  }
+
+  function aufbauen() {
+    const c = D.club;
+    T = TEXTE[c.anrede] || TEXTE.du;
+    SORTEN = D.sorten;
+    MINDEST = D.mindestmenge;
+    document.title = `SERVINO bestellen · ${c.name}`;
+    $("clubname").textContent = c.name;
+    if (c.wappen) { $("wappen").src = c.wappen; $("wappen").alt = `Wappen ${c.name}`; $("wappen").hidden = false; }
+    $("regel-karton").textContent = `Für jeden vollen Karton mit ${KARTON} Flaschen derselben Sorte gilt der Kartonpreis. Gemischte Flaschen kosten den Einzelpreis. Die Mindestbestellung sind ${MINDEST} Flaschen.`;
+    const termine = [];
+    if (datumLang(c.schluss)) termine.push(`Bestellschluss ist ${datumLang(c.schluss)}.`);
+    if (c.abholung) termine.push(`Abholung: ${c.abholung}.`);
+    if (c.bezahlung) termine.push(c.bezahlung);
+    $("regel-termine").textContent = termine.join(" ");
+    $("regel-termine").hidden = !termine.length;
+    $("naechst").textContent = T.naechst;
+    $("danke-jederzeit").textContent = T.jederzeit;
+    $("fragen").textContent = text(T.fragen);
+    $("fragen").hidden = false;
+
+    const behaelter = $("sorten");
+    felder = SORTEN.map(s => {
+      const zeile = document.createElement("div");
+      zeile.className = "sorte";
+      const bild = /^https?:/.test(s.bild) ? s.bild : `bilder/${s.bild}`;
+      zeile.innerHTML = `
+        <img alt="">
+        <div><div class="name"></div><div class="art"></div>
+          <div class="preise">${s.einzel} € je Flasche · Karton ${s.karton * KARTON} €</div></div>
+        <div class="stepper">
+          <button type="button">−</button>
+          <input type="number" inputmode="numeric" min="0" max="120" value="0" autocomplete="off">
+          <button type="button">+</button>
+        </div>
+        <div class="betrag" style="grid-column: 2 / -1"><span class="weg"></span> <span class="wert">0,00 €</span></div>`;
+      zeile.querySelector("img").src = bild;
+      zeile.querySelector("img").alt = s.name;
+      zeile.querySelector(".name").textContent = s.name;
+      zeile.querySelector(".art").textContent = s.art;
+      behaelter.appendChild(zeile);
+      const [minus, plus] = zeile.querySelectorAll("button");
+      const eingabe = zeile.querySelector("input");
+      minus.setAttribute("aria-label", `${s.name} eine Flasche weniger`);
+      plus.setAttribute("aria-label", `${s.name} eine Flasche mehr`);
+      eingabe.setAttribute("aria-label", `${s.name} Flaschen`);
+      const setze = n => { eingabe.value = Math.max(0, Math.min(120, n)); rechnen(); };
+      minus.onclick = () => setze(menge(eingabe) - 1);
+      plus.onclick = () => setze(menge(eingabe) + 1);
+      eingabe.oninput = rechnen;
+      return { eingabe, weg: zeile.querySelector(".weg"), wert: zeile.querySelector(".wert") };
+    });
+  }
+
+  function menge(eingabe) {
+    const n = parseInt(eingabe.value, 10);
+    return Number.isFinite(n) && n > 0 ? Math.min(n, 120) : 0;
+  }
+
+  function weg(sorte, z) {
+    const teile = [];
+    if (z.kartons) teile.push(`${z.kartons} Karton${z.kartons > 1 ? "s" : ""} à ${sorte.karton * KARTON} €`);
+    if (z.rest) teile.push(`${z.rest} × ${sorte.einzel} €`);
+    return teile.join(" + ");
+  }
+
+  const rechne = mengen => bestellung(SORTEN, mengen, MINDEST);
+
+  function rechnen() {
+    const mengen = felder.map(f => menge(f.eingabe));
+    const b = rechne(mengen);
+    felder.forEach((f, i) => {
+      f.weg.textContent = mengen[i] ? weg(SORTEN[i], b.zeilen[i]) : "";
+      f.wert.textContent = euro(b.zeilen[i].betrag);
+    });
+    $("summe").textContent = euro(b.summe);
+    $("flaschen").textContent = `${b.flaschen} Flasche${b.flaschen === 1 ? "" : "n"}`;
+    $("hinweis").hidden = !b.fehlen;
+    $("hinweis").textContent = b.fehlen ? `Die Mindestbestellung sind ${MINDEST} Flaschen. Es fehlen noch ${b.fehlen}.` : "";
+    $("los").disabled = b.flaschen === 0 || b.fehlen > 0;
+    return mengen;
+  }
+
+  // Lesbare Zeilen für die Spalte „Bestellung“ der Tabelle; gerechnet wird dort aus den Mengen.
+  function summentext(mengen) {
+    const b = rechne(mengen);
+    if (!b.flaschen) return "keine Bestellung";
+    const zeilen = SORTEN.map((s, i) => mengen[i]
+      ? `${s.name}: ${mengen[i]} Flasche${mengen[i] === 1 ? "" : "n"}, ${weg(s, b.zeilen[i])} = ${euro(b.zeilen[i].betrag)}` : "").filter(Boolean);
+    zeilen.push(`Summe: ${euro(b.summe)} für ${b.flaschen} Flaschen`);
+    return zeilen.join("\n");
+  }
+
+  // Die Eingabe für die Rückkehr mit der Zurück-Taste merken, sonst zeigte die Summe 0,00 €.
+  const MERKER = "servino-clubs-bestellung";
+  function merken(mengen, anmerkung) {
+    try { sessionStorage.setItem(MERKER, JSON.stringify({ zeichen, mengen, anmerkung })); } catch (e) {}
+  }
+  function wiederherstellen() {
+    try {
+      const g = JSON.parse(sessionStorage.getItem(MERKER) || "null");
+      if (!g || g.zeichen !== zeichen || !felder.length) return false;
+      felder.forEach((f, i) => { f.eingabe.value = g.mengen[i] || 0; });
+      $("anmerkung").value = g.anmerkung || "";
+      return g.mengen.some(n => n) || !!g.anmerkung;
+    } catch (e) { return false; }
+  }
+
+  const schritte = ["schritt-bisher", "schritt-bestellen", "schritt-pruefen", "schritt-danke"];
+  let bisherAnrede = "";
+  let neueBestellung = false;  // nach einer Abholung: das Formular nimmt eine zusätzliche Bestellung auf
+  function zeige(id) {
+    schritte.forEach(s => { $(s).hidden = s !== id; });
+    $("einleitung").hidden = id !== "schritt-bestellen";
+    $("nichts").hidden = neueBestellung;
+    anredeSetzen(id === "schritt-bisher" ? bisherAnrede : T.bestellen);
+    window.scrollTo(0, 0);
+  }
+
+  function liste(tabelle, mengen) {
+    const b = rechne(mengen);
+    tabelle.replaceChildren();
+    const zeile = (links, rechts, klasse) => {
+      const tr = tabelle.insertRow();
+      if (klasse) tr.className = klasse;
+      const a = tr.insertCell(), z = tr.insertCell();
+      a.append(...links);
+      z.className = "betrag";
+      z.textContent = rechts;
+    };
+    const el = (tag, klasse, t) => Object.assign(document.createElement(tag), { className: klasse, textContent: t });
+    if (!b.flaschen) { zeile([el("span", "name", "Keine Bestellung")], ""); return b; }
+    SORTEN.forEach((s, i) => {
+      if (!mengen[i]) return;
+      zeile([el("div", "name", `${mengen[i]} × ${s.name}`), el("div", "weg", weg(s, b.zeilen[i]))], euro(b.zeilen[i].betrag));
+    });
+    zeile([el("span", "", `Summe für ${b.flaschen} Flaschen`)], euro(b.summe), "gesamt");
+    return b;
+  }
+
+  let entwurf = null;
+  function pruefen(mengen, anmerkung) {
+    merken(mengen, anmerkung);
+    entwurf = { mengen, anmerkung };
+    $("pruefen-titel").textContent = neueBestellung ? T.deineZusaetzlich : T.deine;
+    liste($("liste"), mengen);
+    $("anm-anzeige").hidden = !anmerkung;
+    $("anm-anzeige").textContent = anmerkung ? `Anmerkung: ${anmerkung}` : "";
+    const knopf = $("abschicken");
+    knopf.textContent = mengen.some(n => n) ? "Bestellung abschicken" : "Ohne Bestellung abschließen";
+    knopf.disabled = false;
+    knopf.classList.remove("sendet");
+    $("fehler").hidden = true;
+    zeige("schritt-pruefen");
+  }
+
+  function fehlschlag(t, nochmal) {
+    $("fehler").textContent = text(t);
+    $("fehler").hidden = false;
+    const knopf = $("abschicken");
+    knopf.classList.remove("sendet");
+    knopf.disabled = !nochmal;
+    knopf.textContent = "Noch einmal versuchen";
+  }
+
+  async function abschicken() {
+    const knopf = $("abschicken");
+    if (knopf.disabled || !entwurf) return;
+    knopf.disabled = true;  // Sperre gleich am Klick, damit nichts doppelt ankommt
+    knopf.classList.add("sendet");
+    knopf.textContent = "Wird gesendet …";
+    $("fehler").hidden = true;
+    const { mengen, anmerkung } = entwurf;
+    const daten = { k: zeichen, mengen: {}, summe: summentext(mengen), anmerkung };
+    SORTEN.forEach((s, i) => { daten.mengen[s.schluessel] = mengen[i]; });
+    const abbruch = new AbortController();
+    const uhr = setTimeout(() => abbruch.abort(), 25000);
+    try {
+      // Ohne eigenen Content-Type geht die Anfrage als einfacher Text, ohne Vorabfrage des Browsers.
+      const antwort = await fetch(GOOGLE, { method: "POST", body: JSON.stringify(daten), signal: abbruch.signal });
+      const ergebnis = await antwort.json();
+      if (!ergebnis.ok) {
+        if (ergebnis.fehler === "Bestellung geschlossen") return fehlschlag(T.geschlossen, false);
+        throw new Error(ergebnis.fehler || "abgelehnt");
+      }
+      try { sessionStorage.removeItem(MERKER); } catch (e) {}
+      danke(mengen);
+    } catch (e) {
+      fehlschlag(T.nichtAngekommen, true);
+    } finally {
+      clearTimeout(uhr);
+    }
+  }
+
+  function danke(mengen) {
+    const bestellt = mengen.some(n => n);
+    $("danke-titel").textContent = T.danke(D.mitglied.vorname);
+    const teile = [T.eingegangen(neueBestellung)];
+    if (D.club.abholung) teile.push(`Abholung: ${D.club.abholung}.`);
+    if (D.club.bezahlung) teile.push(D.club.bezahlung);
+    $("danke-text").textContent = bestellt ? teile.join(" ") : T.nichts;
+    liste($("danke-liste"), mengen);
+    $("danke-liste").hidden = !bestellt;
+    zeige("schritt-danke");
+  }
+
+  // Oben die geltende Bestellung. Vor der Abholung lässt sie sich ändern, nach der Abholung gibt es eine
+  // zusätzliche Bestellung mit leerem Formular. Frühere, schon abgeholte Bestellungen stehen darunter.
+  function bisherZeigen(b) {
+    const zu = !!D.club.ende && new Date() > new Date(D.club.ende + "T23:59:59");
+    const bestellt = b.status === "bestellt";
+    const keine = b.status === "keine Bestellung";
+    const abgeholt = bestellt && !!b.abgeholt;
+    const neu = (b.nummer || 1) > 1;
+    bisherAnrede = keine ? T.dankRueckmeldung : T.dankBestellung;
+    $("bisher-titel").textContent = keine ? (neu ? "Keine zusätzliche Bestellung" : "Keine Bestellung")
+      : neu ? T.deineServinoZusaetzlich : T.deineServino;
+    const zeit = zeitText(b.zeit);
+    $("bisher-zeit").textContent = zeit ? (keine ? `Vermerkt am ${zeit}` : `Abgeschickt am ${zeit}`) : "";
+    liste($("bisher-liste"), b.mengen);
+    $("bisher-anm").hidden = !b.anmerkung;
+    $("bisher-anm").textContent = b.anmerkung ? `Anmerkung: ${b.anmerkung}` : "";
+    $("bisher-pruefen").hidden = b.status !== "prüfen";
+    $("bisher-pruefen").textContent = text(T.pruefen(b.flaschen > 0 && b.flaschen < MINDEST
+      ? `, weil die Mindestbestellung ${MINDEST} Flaschen sind` : ""));
+    let t;
+    if (abgeholt) t = T.abgeholt(zeitText(b.abgeholt), !zu);
+    else if (zu) t = "Die Bestellung ist abgeschlossen.";
+    else if (keine) t = T.keine;
+    else t = T.aendern;
+    $("bisher-text").textContent = t;
+    const knopf = $("aendern");
+    knopf.hidden = zu;
+    knopf.textContent = abgeholt ? "Zusätzliche Bestellung" : keine ? "Doch bestellen" : "Bestellung ändern";
+    knopf.onclick = () => {
+      neueBestellung = abgeholt;
+      felder.forEach((f, i) => { f.eingabe.value = abgeholt ? 0 : b.mengen[i] || 0; });
+      $("anmerkung").value = abgeholt ? "" : b.anmerkung || "";
+      rechnen();
+      zeige("schritt-bestellen");
+    };
+    const alte = (b.abschnitte || []).slice(0, -1);
+    $("bisher-frueher").hidden = !alte.length;
+    $("bisher-frueher").replaceChildren(...alte.map(a => {
+      const p = document.createElement("p");
+      const sorten = SORTEN.map((s, i) => a.mengen[i] ? `${a.mengen[i]} × ${s.name}` : "").filter(Boolean).join(", ");
+      p.append(Object.assign(document.createElement("b"), { textContent: `Abgeholt am ${zeitText(a.abgeholt).split(" um ")[0]}: ` }),
+               `${sorten}, ${euro(rechne(a.mengen).summe)}`);
+      return p;
+    }));
+    zeige("schritt-bisher");
+  }
+
+  function ladefehler(t) {
+    $("laden").hidden = true;
+    $("ladefehler").textContent = t;
+    $("ladefehler").hidden = false;
+  }
+
+  // Vor dem Laden ist die Anrede des Clubs nicht bekannt, deshalb ohne Du und Sie.
+  const VORAB = {
+    ungueltig: "Dieser Link ist nicht gültig. Bitte den persönlichen Link aus der Mail verwenden.",
+    keinDienst: "Die Bestellseite ist gerade nicht erreichbar. Bitte in einigen Minuten noch einmal versuchen.",
+  };
+  async function laden() {
+    if (!GOOGLE) return ladefehler(VORAB.keinDienst);
+    if (!/^[0-9a-f]{12}$/i.test(zeichen)) return ladefehler(VORAB.ungueltig);
+    const abbruch = new AbortController();
+    const uhr = setTimeout(() => abbruch.abort(), 25000);
+    try {
+      const antwort = await fetch(`${GOOGLE}?k=${encodeURIComponent(zeichen)}`, { signal: abbruch.signal });
+      const d = await antwort.json();
+      if (!d.ok) return ladefehler(d.fehler === "Link ungültig" ? VORAB.ungueltig : VORAB.keinDienst);
+      D = d;
+    } catch (e) {
+      return ladefehler(VORAB.keinDienst);
+    } finally {
+      clearTimeout(uhr);
+    }
+    $("laden").hidden = true;
+    aufbauen();
+    const b = D.bestellung;
+    const eingegeben = wiederherstellen();
+    rechnen();
+    if (!eingegeben && ["bestellt", "prüfen", "keine Bestellung"].includes(b.status)) bisherZeigen(b);
+    else zeige("schritt-bestellen");
+  }
+
+  $("los").onclick = () => pruefen(rechnen(), $("anmerkung").value.trim());
+  $("nichts").onclick = e => { e.preventDefault(); pruefen(SORTEN.map(() => 0), ""); };
+  $("abschicken").onclick = abschicken;
+  $("zurueck").onclick = () => zeige("schritt-bestellen");
+  laden();
+  // Rückkehr aus dem Zwischenspeicher des Browsers: Merker einsetzen und neu rechnen.
+  window.addEventListener("pageshow", e => { if (e.persisted && D) { wiederherstellen(); rechnen(); } });
+</script>
+</body>
+</html>

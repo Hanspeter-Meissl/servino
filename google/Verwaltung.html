@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --navy: #1F3864; --gold: #C0975B; --ink: #1D2733; --grau: #6B7683; --linie: #DCE1E8; --hell: #F4F6F9;
+          --warn: #9A3412; --warn-hell: #FFF4E5; --gut: #1E6B3A; --gut-hell: #E8F5EC; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--hell); color: var(--ink); font: 16px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  header { background: var(--navy); color: #fff; padding: 16px 16px 0; }
+  header p { margin: 0; color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  header h1 { margin: 2px 0 10px; font-size: 21px; }
+  nav { display: flex; gap: 2px; overflow-x: auto; }
+  nav button { flex: none; background: transparent; color: #fff; opacity: .75; border: 0; border-bottom: 3px solid transparent;
+               font: inherit; font-size: 15px; font-weight: 600; padding: 8px 9px 9px; cursor: pointer; }
+  nav button.an { opacity: 1; border-bottom-color: var(--gold); }
+  main { max-width: 720px; margin: 0 auto; padding: 12px 16px 48px; }
+  [hidden] { display: none !important; }
+  h2 { font-size: 15px; color: var(--navy); margin: 22px 0 6px; border-bottom: 2px solid var(--gold); padding-bottom: 3px; }
+  h2 small { color: var(--grau); font-weight: 400; }
+  p { margin: 0 0 10px; }
+  .klein { font-size: 13px; color: var(--grau); }
+  .kacheln { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+  .k { background: #fff; border-radius: 10px; padding: 10px 8px; text-align: center; border: 1px solid var(--linie); }
+  .k b { display: block; font-size: 25px; color: var(--navy); }
+  .k b small { font-size: 15px; color: var(--grau); font-weight: 400; }
+  .k span { font-size: 12px; color: var(--grau); }
+  ul { list-style: none; margin: 0; padding: 0; background: #fff; border-radius: 10px; border: 1px solid var(--linie); }
+  li { padding: 9px 12px; border-bottom: 1px solid var(--linie); }
+  li:last-child { border-bottom: 0; }
+  li i { font-style: normal; float: right; color: var(--grau); font-size: 14px; margin-left: 8px; }
+  em { display: block; font-style: normal; color: #9a5b00; font-size: 13px; }
+  .zeile { display: flex; align-items: center; gap: 10px; }
+  .zeile > div { flex: 1; min-width: 0; }
+  .sorten { display: block; font-size: 17px; font-weight: 600; margin-top: 2px; }
+  .knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  button.b, a.b { font: inherit; font-size: 15px; font-weight: 600; border-radius: 8px; min-height: 44px; padding: 0 14px;
+                  cursor: pointer; flex: none; display: inline-flex; align-items: center; text-decoration: none; }
+  .voll { background: var(--navy); color: #fff; border: 1px solid var(--navy); }
+  .rand { background: #fff; color: var(--navy); border: 1px solid var(--navy); }
+  .leise { background: #fff; color: var(--grau); border: 1px solid var(--linie); }
+  .achtung { background: var(--warn); color: #fff; border: 1px solid var(--warn); }
+  button:disabled { opacity: .5; cursor: progress; }
+  .mk { font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 10px; background: var(--hell); color: var(--grau); white-space: nowrap; }
+  .mk.bestellt { background: var(--gut-hell); color: var(--gut); }
+  .mk.offen { background: var(--warn-hell); color: var(--warn); }
+  .mk.pruefen { background: #FDECEC; color: #9a1b1b; }
+  .daten { font-size: 13px; color: var(--grau); overflow-wrap: anywhere; }
+  .weg { opacity: .55; }
+  label { display: block; font-weight: 600; color: var(--navy); margin: 14px 0 4px; font-size: 14px; }
+  label small { color: var(--grau); font-weight: 400; }
+  input[type=text], input[type=email], input[type=date], textarea, select {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--linie); border-radius: 6px; font: inherit; background: #fff; }
+  textarea { min-height: 90px; }
+  textarea.liste { min-height: 160px; font-family: Consolas, monospace; font-size: 13px; }
+  .feld { background: #fff; border: 1px solid var(--linie); border-radius: 10px; padding: 4px 14px 14px; }
+  .bericht { background: #fff; border-left: 3px solid var(--navy); padding: 10px 12px; margin: 10px 0; font-size: 14px; }
+  .bericht.gut { border-left-color: var(--gut); }
+  .bericht.warn { border-left-color: var(--warn); }
+  #meldung { position: fixed; left: 12px; right: 12px; bottom: 12px; background: #9a1b1b; color: #fff; padding: 10px 12px;
+             border-radius: 8px; font-size: 14px; z-index: 5; }
+  #meldung.gut { background: var(--gut); }
+  .laden { text-align: center; color: var(--grau); padding: 40px 0; }
+  .fuss { color: var(--grau); font-size: 12px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <p>SERVINO Verwaltung</p>
+  <h1 id="titel">Club wird geladen …</h1>
+  <nav id="reiter">
+    <button data-reiter="stand" class="an">Stand</button>
+    <button data-reiter="mitglieder">Mitglieder</button>
+    <button data-reiter="versand">Versand</button>
+    <button data-reiter="einstellungen">Einstellungen</button>
+  </nav>
+</header>
+<main>
+  <div class="laden" id="laden">Daten werden geladen …</div>
+  <section id="stand" hidden></section>
+  <section id="mitglieder" hidden></section>
+  <section id="versand" hidden></section>
+  <section id="einstellungen" hidden></section>
+</main>
+<div id="meldung" hidden></div>
+
+<script>
+  const ZUGANG = __ZUGANG__;
+  let daten = null;
+  let reiter = "stand";
+
+  const esc = t => String(t === null || t === undefined ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const zeitAnzeige = t => { const m = String(t).match(/^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2})/); return m ? `${m[2]}.${m[1]}. ${m[3]}` : String(t); };
+
+  function meldung(text, gut) {
+    const m = document.getElementById("meldung");
+    m.textContent = text || "";
+    m.className = gut ? "gut" : "";
+    m.hidden = !text;
+    if (gut && text) setTimeout(() => { if (m.textContent === text) m.hidden = true; }, 4000);
+  }
+
+  // Aufruf an den Server mit Kürzel und Schlüssel. Der Knopf bleibt gesperrt, bis die Antwort da ist.
+  function rufen(funktion, args, knopf, fertig) {
+    if (knopf) { if (knopf.disabled) return; knopf.dataset.text = knopf.textContent; knopf.disabled = true; knopf.textContent = "bitte warten …"; }
+    meldung("");
+    const los = () => { if (knopf) { knopf.disabled = false; knopf.textContent = knopf.dataset.text; } };
+    google.script.run
+      .withSuccessHandler(r => { los(); fertig(r); })
+      .withFailureHandler(f => { los(); meldung("Nicht ausgeführt: " + ((f && f.message) || f)); })[funktion](ZUGANG.club, ZUGANG.s, ...args);
+  }
+
+  function setzen(neu) {
+    daten = neu;
+    document.getElementById("titel").textContent = daten.club.name;
+    document.getElementById("laden").hidden = true;
+    zeichnen();
+  }
+
+  function zeigen(name) {
+    reiter = name;
+    document.querySelectorAll("#reiter button").forEach(b => b.classList.toggle("an", b.dataset.reiter === name));
+    zeichnen();
+  }
+
+  function zeichnen() {
+    if (!daten) return;
+    ["stand", "mitglieder", "versand", "einstellungen"].forEach(n => { document.getElementById(n).hidden = n !== reiter; });
+    ({ stand: standZeichnen, mitglieder: mitgliederZeichnen, versand: versandZeichnen, einstellungen: einstellungenZeichnen })[reiter]();
+  }
+
+  const statusKlasse = s => s === "bestellt" ? "bestellt" : s === "offen" ? "offen" : s === "prüfen" ? "pruefen" : "";
+
+  // ------------------------------------------------------------ Stand
+  function standZeichnen() {
+    const st = daten.stand, s = st.summen, a = st.abholung;
+    const je = {};
+    st.mitglieder.forEach(m => { je[m.nr] = m; });
+    const letzte = b => !je[b.nr].abschnitte.length || je[b.nr].abschnitte.length === b.nummer;
+    const kachel = (zahl, text) => `<div class="k"><b>${zahl}</b><span>${text}</span></div>`;
+    const liste = (titel, eintraege, zeile) => !eintraege.length ? "" :
+      `<h2>${titel} <small>${eintraege.length}</small></h2><ul>${eintraege.map(zeile).join("")}</ul>`;
+    const hinweis = b => (b.hinweise.length ? `<em>${esc(b.hinweise.join("; "))}</em>` : "")
+      + (letzte(b) && je[b.nr].abholHinweis ? `<em>${esc(je[b.nr].abholHinweis)}</em>` : "")
+      + (b.anmerkung ? `<em>Anmerkung: ${esc(b.anmerkung)}</em>` : "");
+    const wer = b => `${esc(b.name)}${b.nummer > 1 ? " <small>neue Bestellung</small>" : ""}`;
+    const sorten = b => daten.sorten.map((x, i) => b.mengen[i] ? `${b.mengen[i]} ${x.name}` : "").filter(Boolean).join(", ");
+    const knopf = (b, aktion, text) => `<button class="b ${aktion === "abgeholt" ? "voll" : "rand"}" data-abholen="${b.nr}" data-aktion="${aktion}">${text}</button>`;
+    const mit = status => st.mitglieder.filter(m => m.status === status && (m.aktiv || status !== "offen"));
+    const best = st.bestellungen.filter(b => b.status === "bestellt");
+    document.getElementById("stand").innerHTML = `
+      <p class="klein">Stand ${esc(daten.jetzt)}. <a href="#" id="neu">Neu laden</a></p>
+      <div class="kacheln">${kachel(s.bestellt, "Bestellungen")}${kachel(s.flaschen, "Flaschen")}${kachel(s.offen, "ohne Antwort")}</div>
+      <div class="kacheln">${daten.sorten.map((x, i) => kachel(st.sorten[i], esc(x.name))).join("")}</div>
+      <div class="kacheln">${kachel(s["keine Bestellung"], "keine Bestellung")}${kachel(s["prüfen"], "zu prüfen")}${kachel(`${a.abgeholt}<small> / ${a.von}</small>`, "abgeholt")}</div>
+      ${!daten.mitglieder.length ? `<div class="bericht">Noch keine Mitglieder eingetragen. Bitte unter <b>Mitglieder</b> die Liste aus Excel einfügen.</div>` : ""}
+      ${liste("Zu prüfen", st.bestellungen.filter(b => b.status === "prüfen"), b => `<li>${wer(b)}<i>${esc(sorten(b))}</i>${hinweis(b)}</li>`)}
+      ${liste("Abzuholen", best.filter(b => !b.abgeholt), b => `<li><div class="zeile"><div>${wer(b)}<i>${b.flaschen} Fl.</i><span class="sorten">${esc(sorten(b))}</span>${hinweis(b)}</div>${knopf(b, "abgeholt", "Abgeholt")}</div></li>`)}
+      ${liste("Abgeholt", best.filter(b => b.abgeholt), b => `<li><div class="zeile"><div>${wer(b)}<i>${esc(zeitAnzeige(b.abgeholt))}</i><em style="color:var(--grau)">${esc(sorten(b))}</em>${hinweis(b)}</div>${letzte(b) ? knopf(b, "zurückgenommen", "Rückgängig") : ""}</div></li>`)}
+      ${liste("Keine Bestellung", mit("keine Bestellung"), m => `<li>${wer(m)}${hinweis(m)}</li>`)}
+      ${liste("Ohne Antwort", mit("offen"), m => `<li>${esc(m.name)}${hinweis(m)}</li>`)}
+      <p class="fuss">Abgeholt wird immer die ganze Bestellung. Was ein Mitglied nach seiner Abholung bestellt, ist eine neue Bestellung.</p>`;
+    document.getElementById("neu").onclick = e => { e.preventDefault(); rufen("vwLaden", [], null, setzen); };
+  }
+
+  // ------------------------------------------------------------ Mitglieder
+  function whatsapp(m) {
+    let n = String(m.mobil || "").replace(/[^\d+]/g, "");
+    if (n.startsWith("+")) n = n.slice(1); else if (n.startsWith("00")) n = n.slice(2); else if (n.startsWith("0")) n = "43" + n.slice(1);
+    if (n.length < 8) return "";
+    const sie = daten.club.anrede === "sie";
+    const text = `${m.gruss}, ${sie ? "hier ist Ihr persönlicher Link für die SERVINO-Bestellung" : "hier ist dein persönlicher Link für die SERVINO-Bestellung"}: ${m.link}`;
+    return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
+  }
+
+  function mitgliederZeichnen() {
+    const aktive = daten.mitglieder.filter(m => m.aktiv), weg = daten.mitglieder.filter(m => !m.aktiv);
+    const eintrag = m => {
+      const wa = m.aktiv ? whatsapp(m) : "";
+      return `<li class="${m.aktiv ? "" : "weg"}"><div><b>${esc(m.vorname)} ${esc(m.nachname)}</b> <span class="mk ${statusKlasse(m.status)}">${esc(m.status)}</span><i>Nr. ${m.nr}</i></div>
+        <div class="daten">${esc(m.email || "keine E-Mail")}${m.mobil ? " · " + esc(m.mobil) : ""}${m.anrede ? " · Anrede „" + esc(m.anrede) + "“" : ""}</div>
+        <div class="daten">${m.eingeladen ? "Einladung am " + esc(zeitAnzeige(m.eingeladen)) : "noch keine Einladung"}${m.erinnert ? " · Erinnerung am " + esc(zeitAnzeige(m.erinnert)) : ""}</div>
+        <div class="knoepfe">${m.aktiv ? `<button class="b rand" data-kopieren="${esc(m.link)}">Link kopieren</button>${wa ? `<a class="b rand" href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button class="b leise" data-aktiv="${m.nr}" data-wert="0">Entfernen</button>` : `<button class="b leise" data-aktiv="${m.nr}" data-wert="1">Wieder aufnehmen</button>`}</div></li>`;
+    };
+    document.getElementById("mitglieder").innerHTML = `
+      <h2>Liste aus Excel einfügen</h2>
+      <div class="feld">
+        <p class="klein" style="margin-top:10px">Markieren Sie in Excel die Spalten <b>Vorname, Nachname, E-Mail, Mobil</b> und optional <b>Anrede</b> (etwa „Lieber Herbert“ oder „Sehr geehrte Frau Maier“), kopieren Sie sie und fügen Sie sie hier ein. Eine Kopfzeile mit diesen Namen darf dabei sein. Bekannte Mitglieder werden ergänzt und behalten ihren Link.</p>
+        <textarea class="liste" id="einfuegen" placeholder=""></textarea>
+        <div class="knoepfe"><button class="b voll" id="pruefen">Prüfen</button></div>
+        <div id="plan"></div>
+      </div>
+      <h2>Mitglieder <small>${aktive.length}</small></h2>
+      ${aktive.length ? `<ul>${aktive.map(eintrag).join("")}</ul>` : `<p class="klein">Noch keine Mitglieder.</p>`}
+      ${weg.length ? `<h2>Entfernt <small>${weg.length}</small></h2><ul>${weg.map(eintrag).join("")}</ul><p class="fuss">Der Link eines entfernten Mitglieds gilt nicht mehr. Bestellungen bleiben im Stand.</p>` : ""}`;
+    document.getElementById("pruefen").onclick = e => {
+      const text = document.getElementById("einfuegen").value;
+      rufen("vwImport", [text, false], e.currentTarget, r => planZeigen(r.plan, text));
+    };
+  }
+
+  function planZeigen(plan, text) {
+    const teile = [];
+    if (plan.neu.length) teile.push(`<p><b>${plan.neu.length} neu:</b> ${esc(plan.neu.join(", "))}</p>`);
+    if (plan.geaendert.length) teile.push(`<p><b>${plan.geaendert.length} ergänzt:</b> ${esc(plan.geaendert.join(", "))}</p>`);
+    if (plan.gleich) teile.push(`<p>${plan.gleich} unverändert.</p>`);
+    if (plan.fehler.length) teile.push(`<p><b>Übersprungen:</b><br>${plan.fehler.map(esc).join("<br>")}</p>`);
+    const etwas = plan.neu.length || plan.geaendert.length;
+    document.getElementById("plan").innerHTML = `<div class="bericht ${plan.fehler.length ? "warn" : "gut"}">${teile.join("") || "<p>Keine Zeilen erkannt.</p>"}
+      ${etwas ? `<div class="knoepfe"><button class="b voll" id="uebernehmen">Übernehmen</button></div>` : ""}</div>`;
+    if (etwas) document.getElementById("uebernehmen").onclick = e =>
+      rufen("vwImport", [text, true], e.currentTarget, r => { setzen(r.daten); meldung(`${r.plan.neu.length} neu, ${r.plan.geaendert.length} ergänzt.`, true); });
+  }
+
+  // ------------------------------------------------------------ Versand
+  let bestaetigen = "";  // Art, deren Versand der zweite Klick auslöst
+  function versandZeichnen() {
+    const aktive = daten.mitglieder.filter(m => m.aktiv);
+    const ohneMail = aktive.filter(m => !m.email).length;
+    const einladen = aktive.filter(m => m.email && !m.eingeladen).length;
+    const erinnern = aktive.filter(m => m.email && m.status === "offen").length;
+    const knopf = (art, zahl, text) => {
+      const zweit = bestaetigen === art;
+      return `<button class="b ${zweit ? "achtung" : "voll"}" data-senden="${art}" ${zahl ? "" : "disabled"}>${zweit ? `Wirklich an ${zahl} senden?` : text}</button>`;
+    };
+    const zusatz = document.getElementById("zusatz") ? document.getElementById("zusatz").value : "";
+    document.getElementById("versand").innerHTML = `
+      <p class="klein" style="margin-top:12px">Die Mails gehen vom SERVINO-Konto mit dem Absender „SERVINO ${esc(daten.club.name)}“.
+      Antworten landen bei ${daten.club.antwortadresse ? esc(daten.club.antwortadresse) : "niemandem, solange in den Einstellungen keine Antwortadresse steht"}.
+      Heute können noch <b>${daten.kontingent}</b> Mails verschickt werden, das Tageslimit von Google gilt für alle Clubs gemeinsam.</p>
+      <label for="zusatz">Persönlicher Zusatz <small>(freiwillig, steht nach der Einleitung)</small></label>
+      <textarea id="zusatz" maxlength="1500">${esc(zusatz)}</textarea>
+      <h2>Probe</h2>
+      <p class="klein">Schickt die Einladung des ersten Mitglieds an die Antwortadresse. Bitte über den Link der Probe nicht bestellen, er gehört diesem Mitglied.</p>
+      <div class="knoepfe"><button class="b rand" data-senden="Probe" ${daten.club.antwortadresse && aktive.length ? "" : "disabled"}>Probe an mich senden</button></div>
+      <h2>Einladung <small>${einladen} noch nicht eingeladen</small></h2>
+      <p class="klein">Geht an alle mit E-Mail, die noch keine Einladung bekommen haben.${ohneMail ? ` ${ohneMail} ohne E-Mail, ihnen bitte den Link über WhatsApp schicken.` : ""}</p>
+      <div class="knoepfe">${knopf("Einladung", einladen, `Einladung an ${einladen} senden`)}</div>
+      <h2>Erinnerung <small>${erinnern} ohne Antwort</small></h2>
+      <p class="klein">Geht an alle mit E-Mail, die weder bestellt noch abgesagt haben.</p>
+      <div class="knoepfe">${knopf("Erinnerung", erinnern, `Erinnerung an ${erinnern} senden`)}</div>
+      <div id="versandbericht"></div>
+      ${daten.versand.length ? `<h2>Zuletzt verschickt</h2><ul>${daten.versand.map(v => `<li>${esc(v.art)} an ${esc(v.an)}<div class="daten">${esc(zeitAnzeige(v.zeit))}</div>${v.ergebnis !== "gesendet" ? `<em>${esc(v.ergebnis)}</em>` : ""}</li>`).join("")}</ul>` : ""}`;
+  }
+
+  function senden(art, knopf) {
+    if (art !== "Probe" && bestaetigen !== art) { bestaetigen = art; versandZeichnen(); return; }
+    bestaetigen = "";
+    const zusatz = document.getElementById("zusatz").value;
+    rufen("vwSenden", [art, zusatz], knopf, r => {
+      setzen(r.daten);
+      const e = r.ergebnis;
+      document.getElementById("zusatz").value = zusatz;
+      document.getElementById("versandbericht").innerHTML = `<div class="bericht ${e.fehler.length || e.uebrig ? "warn" : "gut"}">
+        <p><b>${e.gesendet} gesendet.</b>${e.uebrig ? ` ${e.uebrig} sind wegen des Tageslimits noch offen. Bitte morgen noch einmal auf denselben Knopf tippen, dann gehen nur die übrigen.` : ""}</p>
+        ${e.fehler.length ? `<p>${e.fehler.map(esc).join("<br>")}</p>` : ""}</div>`;
+    });
+  }
+
+  // ------------------------------------------------------------ Einstellungen
+  function einstellungenZeichnen() {
+    const c = daten.club;
+    const feld = (name, titel, wert, art, hilfe) => `<label for="e-${name}">${titel}${hilfe ? ` <small>${hilfe}</small>` : ""}</label>
+      <input type="${art || "text"}" id="e-${name}" data-feld="${name}" value="${esc(wert)}">`;
+    document.getElementById("einstellungen").innerHTML = `<div class="feld" style="margin-top:12px">
+      ${feld("Name", "Clubname", c.name)}
+      <label for="e-Anrede">Anrede der Mitglieder</label>
+      <select id="e-Anrede" data-feld="Anrede"><option value="du" ${c.anrede === "du" ? "selected" : ""}>Du</option><option value="sie" ${c.anrede === "sie" ? "selected" : ""}>Sie</option></select>
+      ${feld("Bestellschluss", "Bestellschluss", c.schluss, "date", "(steht in Mail und Seite, sperrt nichts)")}
+      ${feld("Abholung", "Abholung", c.abholung, "text", "(etwa „beim Meeting am 12. November“)")}
+      ${feld("Bezahlung", "Bezahlung", c.bezahlung, "text", "(ganzer Satz, etwa „Den Betrag bucht Christian ab.“)")}
+      ${feld("Sekretär", "Name unter der Mail", c.sekretaer)}
+      ${feld("Antwortadresse", "Antwortadresse", c.antwortadresse, "email", "(Antworten auf die Mails gehen hierhin)")}
+      ${feld("Wappen", "Adresse des Wappens", c.wappen, "text", "(Bildadresse, freiwillig)")}
+      ${feld("Ende", "Bestellung schließen am", c.ende, "date", "(freiwillig, danach nimmt die Seite nichts mehr an)")}
+      <div class="knoepfe" style="margin-top:14px"><button class="b voll" id="speichern">Speichern</button></div></div>`;
+    document.getElementById("speichern").onclick = e => {
+      const werte = {};
+      document.querySelectorAll("[data-feld]").forEach(f => { werte[f.dataset.feld] = f.value; });
+      rufen("vwEinstellungen", [werte], e.currentTarget, r => { setzen(r); meldung("Gespeichert.", true); });
+    };
+  }
+
+  // ------------------------------------------------------------ Klicks
+  document.getElementById("reiter").addEventListener("click", e => {
+    const b = e.target.closest("button[data-reiter]");
+    if (b) { bestaetigen = ""; zeigen(b.dataset.reiter); }
+  });
+  document.querySelector("main").addEventListener("click", e => {
+    const ab = e.target.closest("button[data-abholen]");
+    if (ab) return rufen("vwAbholen", [Number(ab.dataset.abholen), ab.dataset.aktion], ab, setzen);
+    const ak = e.target.closest("button[data-aktiv]");
+    if (ak) return rufen("vwAktiv", [Number(ak.dataset.aktiv), ak.dataset.wert === "1"], ak, setzen);
+    const se = e.target.closest("button[data-senden]");
+    if (se) return senden(se.dataset.senden, se);
+    const ko = e.target.closest("button[data-kopieren]");
+    if (ko) {
+      const wert = ko.dataset.kopieren;
+      const feld = Object.assign(document.createElement("textarea"), { value: wert });
+      document.body.appendChild(feld);
+      feld.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (x) { ok = false; }
+      feld.remove();
+      if (ok) meldung("Link kopiert.", true);
+      else window.prompt("Link zum Kopieren:", wert);
+    }
+  });
+
+  rufen("vwLaden", [], null, setzen);
+</script>
+</body>
+</html>
